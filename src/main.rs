@@ -65,6 +65,11 @@ impl Mesh {
         return idx
     }
 
+    fn add_quad(&mut self, a: VertIdx, b: VertIdx, c: VertIdx, d: VertIdx) {
+        self.add_face(Face::tri(a, b, c));
+        self.add_face(Face::tri(c, d, a));
+    }
+
     fn print_obj(&self) {
         println!("g stamp");
 
@@ -86,26 +91,96 @@ fn read_image(file: &str) -> Result<ImageBuffer<Luma<u8>, Vec<u8>>, std::io::Err
     return Ok(luma);
 }
 
+fn smooth(img: &ImageBuffer<Luma<u8>, Vec<u8>>) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+
+    let (xd, yd) = img.dimensions();
+
+    let maybe_get = |x: i32, y: i32|  {
+        if x < 0 || y < 0 {
+            return None
+        }
+        let x = x as u32;
+        let y = y as u32;
+        if x < xd && y < yd {
+            Some(img.get_pixel(x, y).channels()[0])
+        } else {
+            None
+        }
+    };
+
+    let mut smooth_img = img.clone();
+    for y in 0..yd {
+        for x in 0..xd {
+            let value = img.get_pixel(x, y).channels()[0];
+
+            let next = if value < 230 {
+                let mut sc: u32 = 0;
+                let mut ss: u32 = 0;
+                for i in -1..2 {
+                    for j in -1..2 {
+                        if i == 0 && j == 0 {
+                            continue;
+                        }
+                        if let Some(v) = maybe_get(x as i32 + i, y as i32 + j) {
+                            sc += 1;
+                            ss += v as u32;
+                        }
+                    }
+                }
+                let avg = ss / sc;
+                ((avg + value as u32)/2) as u8
+            } else {
+                value
+            };
+            smooth_img.put_pixel(x, y, Luma([next]));
+        }
+    }
+    return smooth_img;
+}
+
+fn invert(img: &mut ImageBuffer<Luma<u8>, Vec<u8>>) {
+    for pixel in img.pixels_mut() {
+        pixel[0] = 255 - pixel[0];
+    }
+}
+
 fn main()  -> Result<(), std::io::Error> {
 
     let file = env::args().nth(1).unwrap();
 
-    let img = read_image(&file)?;
+    let mut img = read_image(&file)?;
 
     let (xd, yd) = img.dimensions();
 
-    let max_edge = 20.0;
+    let max_edge = 40.0;
 
     let maxdim = cmp::max(xd, yd) as f64;
     let scale : f64 = max_edge / maxdim;
 
+    invert(&mut img);
+    for _ in 0..100 {
+        img = smooth(&img);
+    }
+
+    let margin = 20;
+
     let pix_to_z = |x: u32, y: u32| {
-        let value = img.get_pixel(x, y).channels()[0];
-        if value != 0 {
-            2.0
-        } else {
-            1.0
+        let offset = 5.0;
+
+        let min = *[x, y, xd - x, yd - y].iter().min().unwrap();
+        if min < margin {
+            let d = (margin - min) as f64;
+            let hyp = margin as f64;
+            let dz = hyp - ((hyp*hyp - d * d) as f64).sqrt();
+            let r = offset - dz;
+//            return r;
         }
+
+        let value = img.get_pixel(x, y).channels()[0] as f64;
+
+        let value = value / 255.0;
+        let scale = 2.0;
+        return scale * value + offset;
     };
 
     let mut mesh = Mesh::new();
@@ -113,22 +188,30 @@ fn main()  -> Result<(), std::io::Error> {
     for y in 0..yd {
         for x in 0..xd {
             mesh.add_vert(x as f64 * scale, y as f64 * scale,  pix_to_z(x, y));
-            //mesh.add_vert(x as f64 * scale, y as f64 * scale,  (3.14159*(x as f64)/50.).sin());
         }
     }
 
-    let idx_of = |x: u32, y: u32| (y*xd + x) as u32;
+    let idx_of = |x: u32, y: u32| VertIdx::new(y*xd + x as u32);
 
     for y in 0..yd-1 {
         for x in 0..xd-1 {
-            let a = VertIdx::new(idx_of(x, y));
-            let b = VertIdx::new(idx_of(x + 1, y));
-            let c = VertIdx::new(idx_of(x, y + 1));
-            let d = VertIdx::new(idx_of(x + 1, y + 1));
-            mesh.add_face(Face::tri(a, b, c));
-            mesh.add_face(Face::tri(c, b, d));
+            let a = idx_of(x, y);
+            let b = idx_of(x + 1, y);
+            let c = idx_of(x + 1, y + 1);
+            let d = idx_of(x, y + 1);
+            mesh.add_quad(a, b, c, d);
         }
     }
+
+    // add sides
+    let ul = mesh.add_vert(0.0, 0.0, 0.0);
+    let ur = mesh.add_vert(xd as f64 * scale, 0.0, 0.0);
+    let ll = mesh.add_vert(0.0, yd as f64 * scale, 0.0);
+    let lr = mesh.add_vert(xd as f64 * scale, yd as f64 * scale, 0.0);
+    mesh.add_quad(idx_of(0, 0), idx_of(0, yd - 1), ll, ul);
+    mesh.add_quad(idx_of(xd - 1, 0), idx_of(0, 0), ul, ur);
+    mesh.add_quad(idx_of(xd - 1, yd - 1), idx_of(xd - 1, 0), ur, lr);
+    mesh.add_quad(idx_of(0, yd - 1), idx_of(xd - 1, yd - 1), lr, ll);
 
     mesh.print_obj();
 
