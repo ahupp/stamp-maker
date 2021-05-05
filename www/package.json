@@ -1,0 +1,19 @@
+{
+  "name": "stampmaker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "snowpack": "^3.3.7"
+  },
+  "dependencies": {
+    "img2obj": "file:../wasm/pkg",
+    "img2obj-wasm": "file:../wasm/pkg",
+    "three": "^0.128.0"
+  }
+}

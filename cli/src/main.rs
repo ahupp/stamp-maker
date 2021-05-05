@@ -1,8 +1,9 @@
 
 use std::io;
 use std::env;
-
 use img2obj;
+use std::fs::File;
+use std::io::prelude::*;
 
 fn main() -> Result<(), io::Error> {
     let file = env::args().nth(1).unwrap();
@@ -14,7 +15,11 @@ fn main() -> Result<(), io::Error> {
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
 
-    img2obj::generate(&file, &mut stdout, opt)?;
+    let mut f = File::open(file)?;
+    let mut data = Vec::new();
+    f.read_to_end(&mut data);
+
+    let s = img2obj::generate_from_bytes(&data, opt).unwrap();
 
     return Ok(());
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Starter Snowpack App" />
+    <title>Starter Snowpack App</title>
+    <style>
+      /* From http://jsfiddle.net/mrbmc/su9Bd/ */
+      input[type='file'] {
+        border: 3px dashed #999;
+        padding: 140px 50px 10px 50px;
+        cursor: move;
+        position:relative;
+      }
+      input[type='file']:before {
+        content: "drag & drop your files here";
+        display: block;
+        position: absolute;
+        text-align: center;
+        top: 50%;
+        left: 50%;
+        width: 200px;
+        height: 40px;
+        margin: -25px 0 0 -100px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="filepicker" type="file" />
+    <script type="module" src="/index.js"></script>
+  </body>
+</html>

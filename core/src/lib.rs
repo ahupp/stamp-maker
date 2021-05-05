@@ -1,8 +1,17 @@
-use image::{ImageBuffer, io::Reader as ImageReader};
+use image::{ImageBuffer, imageops, io::Reader as ImageReader};
 use std::cmp;
 use std::collections::{HashMap};
 use image::{Pixel, Luma};
 use std::io;
+use std::io::Cursor;
+use wasm_bindgen::prelude::*;
+use std::error::Error;
+
+/*
+TODO
+Expand canvas to handle borders
+Alpha
+*/
 
 #[derive(Clone, Copy, Debug)]
 struct Vert {
@@ -140,16 +149,19 @@ fn smooth(img: &ImageBuffer<Luma<u8>, Vec<u8>>) -> ImageBuffer<Luma<u8>, Vec<u8>
     return smooth_img;
 }
 
-fn invert(img: &mut ImageBuffer<Luma<u8>, Vec<u8>>) {
-    for pixel in img.pixels_mut() {
-        pixel[0] = 255 - pixel[0];
-    }
-}
-
+#[wasm_bindgen]
 pub struct Options {
     pub invert: bool,
     pub smooth: u32,
     pub max_edge: f64,
+}
+
+#[wasm_bindgen]
+impl Options {
+    // can't export Default trait to wasm
+    pub fn new() -> Options {
+        Options::default()
+    }
 }
 
 impl Default for Options {
@@ -158,17 +170,31 @@ impl Default for Options {
     }
 }
 
-pub fn generate(file: &str, output: &mut dyn io::Write, opt: Options)  -> Result<(), std::io::Error> {
+pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: Options) -> Result<(), std::io::Error> {
+    let img = read_image(&file)?;
+    return generate_raw(img, output, opt)
+}
 
-    let mut img = read_image(&file)?;
+pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Write, opt: Options) -> Result<(), std::io::Error> {
 
+    let mut img = img;
     let (xd, yd) = img.dimensions();
 
     let maxdim = cmp::max(xd, yd) as f64;
     let scale : f64 = opt.max_edge / maxdim;
 
     if opt.invert {
-        invert(&mut img);
+      imageops::invert(&mut img);
+    }
+
+    // let max_pix = img.pixels().map(|p| p.channels()[0]).max().unwrap();
+    // let rescale = 255.0/(max_pix as f64);
+    for p in img.pixels_mut() {
+        p.channels_mut()[0] = if p.channels()[0] > 0 {
+            255
+        } else {
+            0
+        }
     }
 
     for _ in 0..opt.smooth {
@@ -181,7 +207,7 @@ pub fn generate(file: &str, output: &mut dyn io::Write, opt: Options)  -> Result
         let value = img.get_pixel(x, y).channels()[0] as f64;
 
         let value = value / 255.0;
-        let scale = 2.0;
+        let scale = 4.0;
         return scale * value + offset;
     };
 
@@ -219,3 +245,15 @@ pub fn generate(file: &str, output: &mut dyn io::Write, opt: Options)  -> Result
 
     return Ok(());
 }
+
+pub fn generate_from_bytes(image: &[u8], opt: Options) -> Result<String, Box<dyn Error>> {
+    let reader = ImageReader::new(Cursor::new(image))
+        .with_guessed_format()
+        .expect("Cursor io never fails");
+    let img = reader.decode().map_err(|e| e.to_string())?;
+    let luma = img.into_luma8();
+    let mut writer : Vec<u8> = Vec::new();
+    generate_raw(luma, &mut writer, opt)?;
+    return Ok(String::from_utf8(writer).unwrap());
+}
+
