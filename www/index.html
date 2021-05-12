@@ -27,10 +27,48 @@
         font-weight: bold;
         color: #999;
       }
+
+      html, body, .container {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      .container {
+        display: flex;
+        width: 100%;
+      }
+
+      #navigation {
+        height: 100%;
+        margin: 20px;
+      }
+      #preview {
+        flex: 1; // take up all remaining space
+      }
+      #options {
+        border: 1px gray dashed;
+        padding: 20px;
+      }
     </style>
   </head>
   <body>
-    <input id="filepicker" type="file" />
-    <script type="module" src="/index.js"></script>
+    <div class="container">
+      <div id="navigation">
+        <input id="filepicker" type="file" />
+        <div id="options">
+          <label form="opt_invert">Invert</label>
+          <input type="checkbox" id="opt_invert" name="opt_invert" />
+          <br/>
+          <label form="opt_smooth">Smooth</label>
+          <input type="text" id="opt_smooth" name="opt_smooth" />
+          <br/>
+          <label form="opt_maxedge">Max Edge</label>
+          <input type="text" id="opt_maxedge" name="opt_maxedge" />
+        </div>
+      </div>
+      <div id="preview"></div>
+      <script type="module" src="/index.js"></script>
+   </div>
   </body>
 </html>

@@ -5,7 +5,8 @@ import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 export class StampRender {
   constructor(container) {
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
+    const camera = new THREE.PerspectiveCamera(45,
+      container.clientWidth / container.clientHeight, 1, 1000)
     camera.position.z = 3
 
     const scene = new THREE.Scene()
@@ -29,7 +30,8 @@ export class StampRender {
 
     const renderer = new THREE.WebGLRenderer()
     renderer.setPixelRatio(window.devicePixelRatio)
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    console.log(container.clientWidth, container.clientHeight)
+    renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"))
 
     container.appendChild(renderer.domElement)
@@ -37,6 +39,14 @@ export class StampRender {
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.25
+
+    window.addEventListener( 'resize', onWindowResize, false);
+
+    function onWindowResize() {
+        camera.aspect = container.clientWidth / container.clientHeight
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight)
+    }
 
     function render() {
       requestAnimationFrame(render)
@@ -50,7 +60,7 @@ export class StampRender {
     const loader = new OBJLoader()
     const object = loader.parse(model)
     if (this.object)  {
-      scene.remove(this.object)
+      this.scene.remove(this.object)
     }
     this.object = object
     this.scene.add(this.object)

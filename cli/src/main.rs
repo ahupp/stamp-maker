@@ -19,7 +19,7 @@ fn main() -> Result<(), io::Error> {
     let mut data = Vec::new();
     f.read_to_end(&mut data);
 
-    let s = img2obj::generate_from_bytes(&data, opt).unwrap();
+    let s = img2obj::generate_from_bytes(&data, &opt).unwrap();
 
     return Ok(());
 }

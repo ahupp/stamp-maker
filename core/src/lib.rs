@@ -58,6 +58,10 @@ impl Mesh {
             index: MeshIndex {face_to_vert: HashMap::new(), vert_to_face: HashMap::new()}}
     }
 
+    fn get_vert<'a>(&'a self, v: VertIdx) -> &'a Vert {
+        &self.verts[v.idx as usize]
+    }
+
     fn add_vert(&mut self, x: f64, y: f64, z: f64) -> VertIdx {
         self.verts.push(Vert {x, y, z});
         return VertIdx {idx: (self.verts.len() - 1) as u32};
@@ -74,8 +78,25 @@ impl Mesh {
     }
 
     fn add_quad(&mut self, a: VertIdx, b: VertIdx, c: VertIdx, d: VertIdx) {
-        self.add_face(Face::tri(a, b, c));
-        self.add_face(Face::tri(c, d, a));
+        let av = self.get_vert(a);
+        let bv = self.get_vert(b);
+        let cv = self.get_vert(c);
+        let dv = self.get_vert(d);
+
+        fn dist(a: &Vert, b: &Vert) -> f64 {
+            fn minsq(c: f64, d: f64) -> f64 {
+                (c-d)*(c-d)
+            }
+            minsq(a.x, b.x) + minsq(a.y, b.y) + minsq(a.z, b.z)
+        }
+
+        if dist(&av,&cv) < dist(&bv,&dv) {
+            self.add_face(Face::tri(a, b, c));
+            self.add_face(Face::tri(a, c, d));
+        } else {
+            self.add_face(Face::tri(b, c, d));
+            self.add_face(Face::tri(a, b, d));
+        }
     }
 
     fn generate_obj(&self, output: &mut dyn io::Write) -> Result<(), std::io::Error> {
@@ -170,12 +191,12 @@ impl Default for Options {
     }
 }
 
-pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: Options) -> Result<(), std::io::Error> {
+pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
     let img = read_image(&file)?;
     return generate_raw(img, output, opt)
 }
 
-pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Write, opt: Options) -> Result<(), std::io::Error> {
+pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
     let mut img = img;
     let (xd, yd) = img.dimensions();
@@ -200,6 +221,8 @@ pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Wr
     for _ in 0..opt.smooth {
         img = smooth(&img);
     }
+
+    //img.save("out.png").unwrap();
 
     let pix_to_z = |x: u32, y: u32| {
         let offset = 5.0;
@@ -246,11 +269,11 @@ pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Wr
     return Ok(());
 }
 
-pub fn generate_from_bytes(image: &[u8], opt: Options) -> Result<String, Box<dyn Error>> {
+pub fn generate_from_bytes(image: &[u8], opt: &Options) -> Result<String, Box<dyn Error>> {
     let reader = ImageReader::new(Cursor::new(image))
         .with_guessed_format()
         .expect("Cursor io never fails");
-    let img = reader.decode().map_err(|e| e.to_string())?;
+    let img = reader.decode()?;
     let luma = img.into_luma8();
     let mut writer : Vec<u8> = Vec::new();
     generate_raw(luma, &mut writer, opt)?;
