@@ -7,19 +7,23 @@ function initStampRender(document) {
   const stampView = new StampRender(preview)
 
   let opt = img2obj.Options.new()
-  opt.invert = true
-  opt.smooth = 10;
 
-  let image = undefined;
+  let image = undefined
+  let filename = undefined
+  let objString = undefined
 
   const picker = document.getElementById("filepicker")
   picker.addEventListener('change', (evt) => {
 
     const files = evt.target.files
-    if (files.length !== 1) {
+    if (files.length === 0) {
+      return
+    } else if (files.length !== 1) {
       throw Error("unexpected number of files " + files.length)
     }
     const nextFile = files[0]
+    filename = nextFile.name
+
     const reader = new FileReader()
     reader.onloadend = (e) => {
       image = new Uint8Array(reader.result)
@@ -28,7 +32,6 @@ function initStampRender(document) {
     reader.readAsArrayBuffer(nextFile)
 
   }, false)
-
 
   const optInvert = document.getElementById("opt_invert")
   optInvert.checked = opt.invert
@@ -53,14 +56,42 @@ function initStampRender(document) {
     reRender()
   })
 
+  const optHeight = document.getElementById("opt_height")
+  optHeight.value = opt.height.toString()
+  optHeight.addEventListener('change', (evt) => {
+    const value = parseInt(evt.target.value, 10)
+    opt.height = value
+    reRender()
+  })
+
+  const download = document.getElementById("start_download")
+  download.addEventListener('click', (evt) => {
+    const blob = new Blob([objString]);
+
+    const baseName = filename.replace(/\.\w+$/, '')
+
+    const link = document.createElement('a')
+    if (link.download === undefined) {
+      throw Error("download attr not defined")
+    }
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${baseName}.obj`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  })
+
   function reRender() {
     if (!image) {
       return
     }
-    console.log(opt)
-    const obj = img2obj.generate_from_bytes(image, opt)
-    console.log(opt)
-    stampView.load(obj)
+
+    download.disabled = false
+
+    objString = img2obj.generate_from_bytes(image, opt)
+    stampView.load(objString)
   }
 }
 

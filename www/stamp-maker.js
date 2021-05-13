@@ -5,9 +5,11 @@ import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js'
 export class StampRender {
   constructor(container) {
 
-    const camera = new THREE.PerspectiveCamera(45,
-      container.clientWidth / container.clientHeight, 1, 1000)
-    camera.position.z = 3
+    this.fov = 45
+
+    const aspect = container.clientWidth / container.clientHeight
+    const camera = new THREE.PerspectiveCamera(this.fov, aspect, 1, 1000)
+    this.camera = camera
 
     const scene = new THREE.Scene()
     const ambient = new THREE.AmbientLight(0xffffff, .25)
@@ -30,7 +32,7 @@ export class StampRender {
 
     const renderer = new THREE.WebGLRenderer()
     renderer.setPixelRatio(window.devicePixelRatio)
-    console.log(container.clientWidth, container.clientHeight)
+    console.log(container.clientHeight, container.clientWidth)
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"))
 
@@ -40,7 +42,7 @@ export class StampRender {
     controls.enableDamping = true
     controls.dampingFactor = 0.25
 
-    window.addEventListener( 'resize', onWindowResize, false);
+    window.addEventListener('resize', onWindowResize, false);
 
     function onWindowResize() {
         camera.aspect = container.clientWidth / container.clientHeight
@@ -58,12 +60,29 @@ export class StampRender {
 
   load(model) {
     const loader = new OBJLoader()
-    const object = loader.parse(model)
-    if (this.object)  {
-      this.scene.remove(this.object)
+    const objGroup = loader.parse(model)
+    const mesh = objGroup.children[0]
+
+    // center in viewport
+    mesh.geometry.computeBoundingBox()
+    const box = mesh.geometry.boundingBox
+
+    const offset = box.max.sub(box.min).divideScalar(2.0)
+    mesh.position.x -= offset.x
+    mesh.position.y -= offset.y
+    mesh.geometry.computeBoundingBox()
+
+    if (this.mesh)  {
+      this.scene.remove(this.mesh)
+    } else {
+      // On first load, backup camera to fit whole model
+      const opposite = 1.2*(mesh.geometry.boundingBox.max.y / 2)
+      const adjacent = opposite/Math.tan((Math.PI/180.)*this.fov/2)
+      this.camera.position.z = adjacent
+      this.camera.lookAt(0, 0, 0)
     }
-    this.object = object
-    this.scene.add(this.object)
+    this.mesh = mesh
+    this.scene.add(this.mesh)
   }
 }
 

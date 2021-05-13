@@ -21,4 +21,3 @@ pub fn generate_from_bytes(image: &[u8], opt: &img2obj::Options) -> Result<Strin
     set_panic_hook();
     img2obj::generate_from_bytes(image, opt).map_err(|e| JsValue::from(e.to_string()))
 }
-

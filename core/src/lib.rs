@@ -145,14 +145,11 @@ fn smooth(img: &ImageBuffer<Luma<u8>, Vec<u8>>) -> ImageBuffer<Luma<u8>, Vec<u8>
         for x in 0..xd {
             let value = img.get_pixel(x, y).channels()[0];
 
-            let next = if value < 230 {
+            let next = if value < 255 {
                 let mut sc: u32 = 0;
                 let mut ss: u32 = 0;
                 for i in -1..2 {
                     for j in -1..2 {
-                        if i == 0 && j == 0 {
-                            continue;
-                        }
                         if let Some(v) = maybe_get(x as i32 + i, y as i32 + j) {
                             sc += 1;
                             ss += v as u32;
@@ -175,6 +172,7 @@ pub struct Options {
     pub invert: bool,
     pub smooth: u32,
     pub max_edge: f64,
+    pub height: f64,
 }
 
 #[wasm_bindgen]
@@ -187,7 +185,7 @@ impl Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options {invert: false, smooth: 0, max_edge: 40.0}
+        Options {invert: true, smooth: 10, max_edge: 40.0, height: 3.0}
     }
 }
 
@@ -208,10 +206,8 @@ pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Wr
       imageops::invert(&mut img);
     }
 
-    // let max_pix = img.pixels().map(|p| p.channels()[0]).max().unwrap();
-    // let rescale = 255.0/(max_pix as f64);
     for p in img.pixels_mut() {
-        p.channels_mut()[0] = if p.channels()[0] > 0 {
+        p.channels_mut()[0] = if p.channels()[0] > 127 {
             255
         } else {
             0
@@ -222,16 +218,9 @@ pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Wr
         img = smooth(&img);
     }
 
-    //img.save("out.png").unwrap();
-
     let pix_to_z = |x: u32, y: u32| {
-        let offset = 5.0;
-
         let value = img.get_pixel(x, y).channels()[0] as f64;
-
-        let value = value / 255.0;
-        let scale = 4.0;
-        return scale * value + offset;
+        opt.height * (value / 255.0) + 4.0
     };
 
     let mut mesh = Mesh::new();

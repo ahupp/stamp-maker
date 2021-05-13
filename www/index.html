@@ -8,13 +8,13 @@
     <style>
       /* From http://jsfiddle.net/mrbmc/su9Bd/ */
       input[type='file'] {
-        border: 3px dashed #999;
+        border: 1px dashed gray;
         padding: 140px 50px 10px 50px;
         cursor: move;
         position:relative;
       }
       input[type='file']:before {
-        content: "drag & drop your files here";
+        content: "drag & drop file";
         display: block;
         position: absolute;
         text-align: center;
@@ -39,16 +39,23 @@
         width: 100%;
       }
 
+      #navigation * {
+        margin: 5px;
+      }
+
       #navigation {
         height: 100%;
         margin: 20px;
       }
-      #preview {
-        flex: 1; // take up all remaining space
-      }
       #options {
         border: 1px gray dashed;
         padding: 20px;
+        display: grid;
+        grid-template-columns: max-content max-content;
+        grid-gap: 5px;
+      }
+      #preview {
+        flex: 1;
       }
     </style>
   </head>
@@ -59,13 +66,17 @@
         <div id="options">
           <label form="opt_invert">Invert</label>
           <input type="checkbox" id="opt_invert" name="opt_invert" />
-          <br/>
+
           <label form="opt_smooth">Smooth</label>
           <input type="text" id="opt_smooth" name="opt_smooth" />
-          <br/>
-          <label form="opt_maxedge">Max Edge</label>
+
+          <label form="opt_maxedge">Max edge length (mm)</label>
           <input type="text" id="opt_maxedge" name="opt_maxedge" />
+
+          <label form="opt_height">Height (mm)</label>
+          <input type="text" id="opt_height" name="opt_height" />
         </div>
+        <button type="button" disabled="true" id="start_download" name="start_download">Download as .obj</input>
       </div>
       <div id="preview"></div>
       <script type="module" src="/index.js"></script>
