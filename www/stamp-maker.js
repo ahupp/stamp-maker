@@ -32,7 +32,6 @@ export class StampRender {
 
     const renderer = new THREE.WebGLRenderer()
     renderer.setPixelRatio(window.devicePixelRatio)
-    console.log(container.clientHeight, container.clientWidth)
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"))
 
