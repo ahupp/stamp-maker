@@ -1,4 +1,4 @@
-use image::{ImageBuffer, imageops, io::Reader as ImageReader};
+use image::{GrayImage, imageops, io::Reader as ImageReader};
 use std::cmp;
 use std::collections::{HashMap};
 use image::{Pixel, Luma};
@@ -115,15 +115,12 @@ impl Mesh {
     }
 }
 
-fn read_image(file: &str) -> Result<ImageBuffer<Luma<u8>, Vec<u8>>, std::io::Error> {
-    // TODO: not sure how to handle decode error
-    let img = ImageReader::open(file)?.decode().unwrap();
-
-    let luma = img.into_luma8();
-    return Ok(luma);
+fn read_image(file: &str) -> Result<GrayImage, Box<dyn Error>> {
+    let img = ImageReader::open(file)?.decode()?;
+    Ok(img.into_luma8())
 }
 
-fn smooth(img: &ImageBuffer<Luma<u8>, Vec<u8>>) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+fn smooth(img: &GrayImage) -> GrayImage {
 
     let (xd, yd) = img.dimensions();
 
@@ -193,8 +190,7 @@ pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options)
     let img = read_image(&file)?;
     return generate_raw(img, output, opt)
 }
-
-pub fn generate_raw(img: ImageBuffer<Luma<u8>, Vec<u8>>, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
+pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
     let mut img = img;
     let (xd, yd) = img.dimensions();
