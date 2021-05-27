@@ -186,9 +186,9 @@ impl Default for Options {
     }
 }
 
-pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
+pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options) -> Result<(), Box<dyn Error>> {
     let img = read_image(&file)?;
-    return generate_raw(img, output, opt)
+    Ok(generate_raw(img, output, opt)?)
 }
 pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
