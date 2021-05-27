@@ -167,9 +167,10 @@ fn smooth(img: &GrayImage) -> GrayImage {
 #[wasm_bindgen]
 pub struct Options {
     pub invert: bool,
-    pub smooth: u32,
-    pub max_edge: f64,
-    pub height: f64,
+    pub smooth_iter: u32,
+    pub max_edge_mm: f64,
+    pub height_mm: f64,
+    pub margin: u32,
 }
 
 #[wasm_bindgen]
@@ -182,7 +183,7 @@ impl Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options {invert: true, smooth: 10, max_edge: 40.0, height: 3.0}
+        Options {invert: true, smooth_iter: 10, max_edge_mm: 40.0, height_mm: 3.0, margin: 5}
     }
 }
 
@@ -193,14 +194,14 @@ pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options)
 pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
     let mut img = img;
-    let (xd, yd) = img.dimensions();
-
-    let maxdim = cmp::max(xd, yd) as f64;
-    let scale : f64 = opt.max_edge / maxdim;
 
     if opt.invert {
       imageops::invert(&mut img);
     }
+    let (xd, yd) = img.dimensions();
+
+    let maxdim = cmp::max(xd, yd) as f64;
+    let scale : f64 = opt.max_edge_mm / maxdim;
 
     for p in img.pixels_mut() {
         p.channels_mut()[0] = if p.channels()[0] > 127 {
@@ -210,13 +211,13 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
         }
     }
 
-    for _ in 0..opt.smooth {
+    for _ in 0..opt.smooth_iter {
         img = smooth(&img);
     }
 
     let pix_to_z = |x: u32, y: u32| {
         let value = img.get_pixel(x, y).channels()[0] as f64;
-        opt.height * (value / 255.0) + 4.0
+        opt.height_mm * (value / 255.0) + 4.0
     };
 
     let mut mesh = Mesh::new();

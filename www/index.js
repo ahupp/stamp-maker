@@ -41,26 +41,26 @@ function initStampRender(document) {
   })
 
   const optMaxEdge = document.getElementById("opt_maxedge")
-  optMaxEdge.value = opt.max_edge.toString()
+  optMaxEdge.value = opt.max_edge_mm.toString()
   optMaxEdge.addEventListener('change', (evt) => {
     const value = parseInt(evt.target.value, 10)
-    opt.max_edge = value
+    opt.max_edge_mm = value
     reRender()
   })
 
   const optSmooth = document.getElementById("opt_smooth")
-  optSmooth.value = opt.smooth.toString()
+  optSmooth.value = opt.smooth_iter.toString()
   optSmooth.addEventListener('change', (evt) => {
     const value = parseInt(evt.target.value, 10)
-    opt.smooth = value
+    opt.smooth_iter = value
     reRender()
   })
 
   const optHeight = document.getElementById("opt_height")
-  optHeight.value = opt.height.toString()
+  optHeight.value = opt.height_mm.toString()
   optHeight.addEventListener('change', (evt) => {
     const value = parseInt(evt.target.value, 10)
-    opt.height = value
+    opt.height_mm = value
     reRender()
   })
 
