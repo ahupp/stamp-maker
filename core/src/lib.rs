@@ -9,7 +9,6 @@ use std::error::Error;
 
 /*
 TODO
-Expand canvas to handle borders
 Alpha
 */
 
@@ -196,8 +195,15 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
     let mut img = img;
 
     if opt.invert {
-      imageops::invert(&mut img);
+        imageops::invert(&mut img);
     }
+    
+    // push out border to avoid holes on edge
+    const BORDER_PADDING : u32 = 10;
+    let mut expanded = GrayImage::new(img.dimensions().0 + 2*BORDER_PADDING, img.dimensions().1 + 2*BORDER_PADDING);
+    imageops::replace(&mut expanded, &img, BORDER_PADDING, BORDER_PADDING);
+    img = expanded;
+
     let (xd, yd) = img.dimensions();
 
     let maxdim = cmp::max(xd, yd) as f64;
