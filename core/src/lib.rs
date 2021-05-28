@@ -1,16 +1,12 @@
 use image::{GrayImage, imageops, io::Reader as ImageReader};
 use std::cmp;
 use std::collections::{HashMap};
-use image::{Luma, Pixel};
+use image::{ImageBuffer, Luma, Pixel};
 use std::io;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 use std::error::Error;
 
-/*
-TODO
-Alpha
-*/
 
 #[derive(Clone, Copy, Debug)]
 struct Vert {
@@ -89,6 +85,7 @@ impl Mesh {
             minsq(a.x, b.x) + minsq(a.y, b.y) + minsq(a.z, b.z)
         }
 
+        // Split the quad into triangles so that we minimize the length of the hypotenuse
         if dist(&av,&cv) < dist(&bv,&dv) {
             self.add_face(Face::tri(a, b, c));
             self.add_face(Face::tri(a, c, d));
@@ -114,9 +111,30 @@ impl Mesh {
     }
 }
 
+// Convert into a single channel image, copying from alpha
+fn flatten_alpha<T: 'static + Pixel<Subpixel = u8>>(img: &ImageBuffer<T, Vec<T::Subpixel>>) -> GrayImage {
+    let (xd, yd) = img.dimensions();
+    let mut dst: ImageBuffer<Luma<T::Subpixel>, Vec<T::Subpixel>> = ImageBuffer::new(xd, yd);
+    let alpha_channel : usize = (T::CHANNEL_COUNT - 1) as usize;
+    for (x, y, pixel) in dst.enumerate_pixels_mut() {
+        let src_pix = img.get_pixel(x, y);
+        let channels = src_pix.channels();
+        let alpha = channels[alpha_channel];
+        pixel[0] = alpha;
+    }
+    dst
+}
+
+
 fn read_image(file: &str) -> Result<GrayImage, Box<dyn Error>> {
     let img = ImageReader::open(file)?.decode()?;
-    Ok(img.into_luma8())
+    let gray = match img {
+        image::DynamicImage::ImageLumaA8(img) => flatten_alpha(&img),
+        image::DynamicImage::ImageRgba8(img) => flatten_alpha(&img),
+        image::DynamicImage::ImageLuma8(img) => img,
+        _ => panic!("unhandled image type: {:?}", img.color()),
+    };
+    Ok(gray)
 }
 
 fn smooth(img: &GrayImage, smooth_radius_pixels: u32) -> GrayImage {
@@ -196,7 +214,7 @@ impl Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options {invert: true, smooth_radius_mm: 0.1, max_edge_mm: 40.0, height_mm: 3.0}
+        Options {invert: true, smooth_radius_mm: 0.5, max_edge_mm: 40.0, height_mm: 3.0}
     }
 }
 

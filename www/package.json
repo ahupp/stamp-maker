@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name img2obj --release; cd ../www; npm i ../wasm/pkg"
+    "wasmbuild": 
+      "cd ../wasm; wasm-pack build --target web --out-name img2obj --release"
   },
   "author": "",
   "license": "ISC",
