@@ -43,23 +43,23 @@ function initStampRender(document) {
   const optMaxEdge = document.getElementById("opt_maxedge")
   optMaxEdge.value = opt.max_edge_mm.toString()
   optMaxEdge.addEventListener('change', (evt) => {
-    const value = parseInt(evt.target.value, 10)
+    const value = parseFloat(evt.target.value)
     opt.max_edge_mm = value
     reRender()
   })
 
   const optSmooth = document.getElementById("opt_smooth")
-  optSmooth.value = opt.smooth_iter.toString()
+  optSmooth.value = opt.smooth_radius_mm.toString()
   optSmooth.addEventListener('change', (evt) => {
-    const value = parseInt(evt.target.value, 10)
-    opt.smooth_iter = value
+    const value = parseFloat(evt.target.value)
+    opt.smooth_radius_mm = value
     reRender()
   })
 
   const optHeight = document.getElementById("opt_height")
   optHeight.value = opt.height_mm.toString()
   optHeight.addEventListener('change', (evt) => {
-    const value = parseInt(evt.target.value, 10)
+    const value = parseFloat(evt.target.value)
     opt.height_mm = value
     reRender()
   })

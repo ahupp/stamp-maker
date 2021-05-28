@@ -119,9 +119,24 @@ fn read_image(file: &str) -> Result<GrayImage, Box<dyn Error>> {
     Ok(img.into_luma8())
 }
 
-fn smooth(img: &GrayImage) -> GrayImage {
+fn smooth(img: &GrayImage, smooth_radius_pixels: u32) -> GrayImage {
 
     let (xd, yd) = img.dimensions();
+
+    // List of coordinates within a circle of smooth_radius
+    let mut circle = Vec::new();
+    for dx in 0..(smooth_radius_pixels + 1) {
+        for dy in 0..(smooth_radius_pixels + 1) {
+            if dx*dx + dy*dy <= smooth_radius_pixels*smooth_radius_pixels {
+                circle.push((dx as i32, dy as i32));
+                if !(dx == 0 && dy == 0) {
+                    circle.push((-(dx as i32), dy as i32));
+                    circle.push((dx as i32, -(dy as i32)));
+                    circle.push((-(dx as i32), -(dy as i32)));
+                }
+            }
+        }
+    }
 
     let maybe_get = |x: i32, y: i32|  {
         if x < 0 || y < 0 {
@@ -136,28 +151,28 @@ fn smooth(img: &GrayImage) -> GrayImage {
         }
     };
 
-    let mut smooth_img = img.clone();
-    for y in 0..yd {
-        for x in 0..xd {
-            let value = img.get_pixel(x, y).channels()[0];
+    let smooth_radius = smooth_radius_pixels as f32;
 
-            let next = if value < 255 {
-                let mut sc: u32 = 0;
-                let mut ss: u32 = 0;
-                for i in -1..2 {
-                    for j in -1..2 {
-                        if let Some(v) = maybe_get(x as i32 + i, y as i32 + j) {
-                            sc += 1;
-                            ss += v as u32;
-                        }
-                    }
+    let mut smooth_img = img.clone();
+    for (x, y, pixel) in smooth_img.enumerate_pixels_mut() {
+
+        // Squared distance to nearest set pixel
+        let nearest_peak_squared = circle.iter().filter_map(|(dx, dy)| {
+            let (x, y) = (dx + x as i32, dy + y as i32);
+            if let Some(value) = maybe_get(x, y) {
+                if value == 255 {
+                    return Some(dx*dx + dy*dy)
                 }
-                let avg = ss / sc;
-                ((avg + value as u32)/2) as u8
-            } else {
-                value
-            };
-            smooth_img.put_pixel(x, y, Luma([next]));
+            }
+            return None
+        }).min();
+
+        if let Some(nearest_peak_squared) = nearest_peak_squared {
+            let nearest_peak = (nearest_peak_squared as f32).sqrt();
+
+            let value = 255.0 * (smooth_radius - nearest_peak) / smooth_radius;
+
+            pixel[0] = value as u8;
         }
     }
     return smooth_img;
@@ -166,7 +181,7 @@ fn smooth(img: &GrayImage) -> GrayImage {
 #[wasm_bindgen]
 pub struct Options {
     pub invert: bool,
-    pub smooth_iter: u32,
+    pub smooth_radius_mm: f64,
     pub max_edge_mm: f64,
     pub height_mm: f64,
     pub margin: u32,
@@ -182,7 +197,7 @@ impl Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options {invert: true, smooth_iter: 10, max_edge_mm: 40.0, height_mm: 3.0, margin: 5}
+        Options {invert: true, smooth_radius_mm: 0.1, max_edge_mm: 40.0, height_mm: 3.0}
     }
 }
 
@@ -192,22 +207,34 @@ pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options)
 }
 pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
+    let mm_per_pixel = |img: &GrayImage| {
+        let (xd, yd) = img.dimensions();
+        let maxdim = cmp::max(xd, yd);
+        opt.max_edge_mm / (maxdim as f64)
+    };
+
     let mut img = img;
 
     if opt.invert {
         imageops::invert(&mut img);
     }
-    
-    // push out border to avoid holes on edge
-    const BORDER_PADDING : u32 = 10;
-    let mut expanded = GrayImage::new(img.dimensions().0 + 2*BORDER_PADDING, img.dimensions().1 + 2*BORDER_PADDING);
-    imageops::replace(&mut expanded, &img, BORDER_PADDING, BORDER_PADDING);
-    img = expanded;
 
-    let (xd, yd) = img.dimensions();
-
-    let maxdim = cmp::max(xd, yd) as f64;
-    let scale : f64 = opt.max_edge_mm / maxdim;
+    // Resize if image is large, since the conversion is slow
+    img = {
+        let (xd, yd) = img.dimensions();
+        let maxdim = cmp::max(xd, yd);
+        const MAX_DIMENSION : u32 = 512;
+        if maxdim > MAX_DIMENSION {
+            let rescale = (MAX_DIMENSION as f32) / (maxdim as f32);
+            let scale = |dim: u32| {
+                (rescale * (dim as f32)).round() as u32
+            };
+            let (rxd, ryd) = (scale(xd), scale(yd));
+            imageops::resize(&img, rxd, ryd, imageops::FilterType::Nearest)
+        } else {
+            img
+        }
+    };
 
     for p in img.pixels_mut() {
         p.channels_mut()[0] = if p.channels()[0] > 127 {
@@ -217,23 +244,33 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
         }
     }
 
-    for _ in 0..opt.smooth_iter {
-        img = smooth(&img);
+    // push out border to avoid holes on edge
+    img = {
+        let border_padding = (opt.smooth_radius_mm * mm_per_pixel(&img) + 5.0) as u32;
+        let mut expanded = GrayImage::new(
+            img.dimensions().0 + 2*border_padding, img.dimensions().1 + 2*border_padding);
+        imageops::replace(&mut expanded, &img, border_padding, border_padding);
+        expanded
+    };
+
+    if opt.smooth_radius_mm > 0.0 {
+        let smooth_radius_pixels = (opt.smooth_radius_mm / mm_per_pixel(&img)) as u32;
+        img = smooth(&img, smooth_radius_pixels);
     }
 
-    let pix_to_z = |x: u32, y: u32| {
-        let value = img.get_pixel(x, y).channels()[0] as f64;
+    let pix_to_z = |pix: &Luma<u8>| {
+        let value = pix[0] as f64;
         opt.height_mm * (value / 255.0) + 4.0
     };
 
     let mut mesh = Mesh::new();
 
-    for y in 0..yd {
-        for x in 0..xd {
-            mesh.add_vert(x as f64 * scale, y as f64 * scale,  pix_to_z(x, y));
-        }
+    let mm_per_pixel = mm_per_pixel(&img);
+    for (x, y, pixel) in img.enumerate_pixels() {
+        mesh.add_vert(x as f64 * mm_per_pixel, y as f64 * mm_per_pixel,  pix_to_z(pixel));
     }
 
+    let (xd, yd) = img.dimensions();
     let idx_of = |x: u32, y: u32| VertIdx::new(y*xd + x as u32);
 
     for y in 0..yd-1 {
@@ -248,9 +285,9 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
 
     // add sides
     let ul = mesh.add_vert(0.0, 0.0, 0.0);
-    let ur = mesh.add_vert(xd as f64 * scale, 0.0, 0.0);
-    let ll = mesh.add_vert(0.0, yd as f64 * scale, 0.0);
-    let lr = mesh.add_vert(xd as f64 * scale, yd as f64 * scale, 0.0);
+    let ur = mesh.add_vert(xd as f64 * mm_per_pixel, 0.0, 0.0);
+    let ll = mesh.add_vert(0.0, yd as f64 * mm_per_pixel, 0.0);
+    let lr = mesh.add_vert(xd as f64 * mm_per_pixel, yd as f64 * mm_per_pixel, 0.0);
     mesh.add_quad(idx_of(0, 0), idx_of(0, yd - 1), ll, ul);
     mesh.add_quad(idx_of(xd - 1, 0), idx_of(0, 0), ul, ur);
     mesh.add_quad(idx_of(xd - 1, yd - 1), idx_of(xd - 1, 0), ur, lr);
