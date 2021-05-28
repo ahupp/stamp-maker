@@ -1,7 +1,7 @@
 use image::{GrayImage, imageops, io::Reader as ImageReader};
 use std::cmp;
 use std::collections::{HashMap};
-use image::{Pixel, Luma};
+use image::{Luma, Pixel};
 use std::io;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
@@ -184,7 +184,6 @@ pub struct Options {
     pub smooth_radius_mm: f64,
     pub max_edge_mm: f64,
     pub height_mm: f64,
-    pub margin: u32,
 }
 
 #[wasm_bindgen]
@@ -205,6 +204,16 @@ pub fn generate_from_file(file: &str, output: &mut dyn io::Write, opt: &Options)
     let img = read_image(&file)?;
     Ok(generate_raw(img, output, opt)?)
 }
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
 pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -> Result<(), std::io::Error> {
 
     let mm_per_pixel = |img: &GrayImage| {
@@ -215,6 +224,7 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
 
     let mut img = img;
 
+    // Convert to a binary image, 255 is high, 0 is low
     if opt.invert {
         imageops::invert(&mut img);
     }
@@ -225,8 +235,8 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
         let maxdim = cmp::max(xd, yd);
         const MAX_DIMENSION : u32 = 512;
         if maxdim > MAX_DIMENSION {
-            let rescale = (MAX_DIMENSION as f32) / (maxdim as f32);
             let scale = |dim: u32| {
+                let rescale = (MAX_DIMENSION as f32) / (maxdim as f32);
                 (rescale * (dim as f32)).round() as u32
             };
             let (rxd, ryd) = (scale(xd), scale(yd));
