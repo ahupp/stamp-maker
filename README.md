@@ -10,10 +10,10 @@ customization of a few important parameters (dimensions, smoothing, etc).
 
 
 # Layout
- core/: a Rust library `stamp-maker` for image -> 3d model transform
- cli/: a cli interface to the library
- wasm/: A wrapper around core/ that uses wasm-pack to generate a WASM interface to stamp-maker
- www/: a browser interface
+ * core/: a Rust library `stamp-maker` for image -> 3d model transform
+ * cli/: a cli interface to the library
+ * wasm/: A wrapper around core/ that uses wasm-pack to generate a WASM interface to stamp-maker
+ * www/: browser UI
 
 # Development
 
