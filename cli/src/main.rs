@@ -1,13 +1,13 @@
 
 use std::io;
 use std::env;
-use img2obj;
+use stamp_maker;
 use std::fs::File;
 use std::io::prelude::*;
 
 fn main() -> Result<(), io::Error> {
     let file = env::args().nth(1).unwrap();
-    let mut opt = img2obj::Options::default();
+    let mut opt = stamp_maker::Options::default();
     opt.max_edge = 40.0;
     opt.invert = true;
     opt.smooth = 100;
@@ -19,7 +19,7 @@ fn main() -> Result<(), io::Error> {
     let mut data = Vec::new();
     f.read_to_end(&mut data);
 
-    let s = img2obj::generate_from_bytes(&data, &opt).unwrap();
+    let s = stamp_maker::generate_from_bytes(&data, &opt).unwrap();
 
     return Ok(());
 }

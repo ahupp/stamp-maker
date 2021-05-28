@@ -17,7 +17,7 @@ pub fn set_panic_hook() {
 }
 
 #[wasm_bindgen]
-pub fn generate_from_bytes(image: &[u8], opt: &img2obj::Options) -> Result<String, JsValue> {
+pub fn generate_from_bytes(image: &[u8], opt: &stamp_maker::Options) -> Result<String, JsValue> {
     set_panic_hook();
-    img2obj::generate_from_bytes(image, opt).map_err(|e| JsValue::from(e.to_string()))
+    stamp_maker::generate_from_bytes(image, opt).map_err(|e| JsValue::from(e.to_string()))
 }

@@ -1,12 +1,12 @@
-import {StampRender} from './stamp-maker.js';
-import * as img2obj from 'img2obj'
+import {StampRender} from './stamp-render.js';
+import * as stamp_maker from 'stamp-maker'
 
 function initStampRender(document) {
   const preview = document.getElementById("preview");
 
   const stampView = new StampRender(preview)
 
-  let opt = img2obj.Options.new()
+  let opt = stamp_maker.Options.new()
 
   let image = undefined
   let filename = undefined
@@ -90,12 +90,12 @@ function initStampRender(document) {
 
     download.disabled = false
 
-    objString = img2obj.generate_from_bytes(image, opt)
+    objString = stamp_maker.generate_from_bytes(image, opt)
     stampView.load(objString)
   }
 }
 
-img2obj.default().then(_ => {
+stamp_maker.default().then(_ => {
   initStampRender(document)
 })
 

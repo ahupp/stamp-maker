@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "wasmbuild": 
-      "cd ../wasm; wasm-pack build --target web --out-name img2obj --release"
+    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name img2obj --release"
   },
   "author": "",
   "license": "ISC",
@@ -13,8 +12,8 @@
     "snowpack": "^3.5.1"
   },
   "dependencies": {
-    "img2obj": "file:../wasm/pkg",
-    "img2obj-wasm": "file:../wasm/pkg",
+    "stamp-maker": "file:../wasm/pkg",
+    "stamp-maker-wasm": "file:../wasm/pkg",
     "three": "^0.128.0"
   }
 }

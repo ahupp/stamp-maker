@@ -1,11 +1,11 @@
 [package]
-name = "img2obj"
+name = "stamp-maker"
 version = "0.1.0"
 authors = ["Adam Hupp <adam@hupp.org>"]
 edition = "2018"
 
 [lib]
-name = "img2obj"
+name = "stamp_maker"
 path = "src/lib.rs"
 
 
@@ -15,5 +15,5 @@ wasm-bindgen = "0.2.63"
 js-sys = "0.3.50"
 
 [[bin]]
-name = "img2obj"
+name = "stamp_maker"
 path = "src/main.rs"
