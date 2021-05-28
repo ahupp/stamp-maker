@@ -256,7 +256,7 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
 
     // push out border to avoid holes on edge
     img = {
-        let border_padding = (opt.smooth_radius_mm * mm_per_pixel(&img) + 5.0) as u32;
+        let border_padding = (opt.smooth_radius_mm / mm_per_pixel(&img) + 5.0) as u32;
         let mut expanded = GrayImage::new(
             img.dimensions().0 + 2*border_padding, img.dimensions().1 + 2*border_padding);
         imageops::replace(&mut expanded, &img, border_padding, border_padding);
