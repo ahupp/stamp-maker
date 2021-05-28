@@ -1,10 +1,10 @@
 {
-  "name": "stampmaker",
+  "name": "stamp-maker-www",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name img2obj --release"
+    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name stamp-maker --release"
   },
   "author": "",
   "license": "ISC",

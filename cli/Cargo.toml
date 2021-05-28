@@ -1,9 +1,9 @@
 [package]
-name = "img2obj-cli"
+name = "stamp-maker-cli"
 version = "0.1.0"
 authors = ["Adam Hupp <adam@hupp.org>"]
 edition = "2018"
 
 
 [dependencies]
-img2obj = {path = "../core"}
+stamp-maker = {path = "../core"}
