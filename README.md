@@ -17,10 +17,17 @@ customization of a few important parameters (dimensions, smoothing, etc).
 
 # Development
 
+Developing this project depends on:
+
+ 1. npm, packaged with nodejs
+ 2. [rustup](https://rustup.rs/), the rust toolchain installer
+ 3. [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/), a Rust WASM build tool
+
 To rebuild the WASM:
 
 ```
  $ cd www
+ $ npm install
  $ npm run wasmbuild
 ```
 
