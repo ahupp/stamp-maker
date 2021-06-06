@@ -1,8 +1,8 @@
-import {StampRender} from './stamp-render.js';
-import * as stamp_maker from 'stamp-maker'
+import {StampRender} from './stamp-render.js'
+import * as stamp_maker from 'stamp-maker-wasm'
 
 function initStampRender(document) {
-  const preview = document.getElementById("preview");
+  const preview = document.getElementById("preview")
 
   const stampView = new StampRender(preview)
 

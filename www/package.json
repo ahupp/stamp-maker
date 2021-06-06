@@ -12,7 +12,6 @@
     "snowpack": "^3.5.1"
   },
   "dependencies": {
-    "stamp-maker": "file:../wasm/pkg",
     "stamp-maker-wasm": "file:../wasm/pkg",
     "three": "^0.128.0"
   }

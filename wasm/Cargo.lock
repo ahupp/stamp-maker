@@ -179,17 +179,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "img2obj-wasm"
-version = "0.1.0"
-dependencies = [
- "console_error_panic_hook",
- "stamp-maker",
- "wasm-bindgen",
- "wasm-bindgen-test",
- "wee_alloc",
-]
-
-[[package]]
 name = "jpeg-decoder"
 version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -393,6 +382,17 @@ dependencies = [
  "image",
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "stamp-maker-wasm"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "stamp-maker",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+ "wee_alloc",
 ]
 
 [[package]]
