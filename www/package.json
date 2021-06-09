@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name stamp-maker --release"
+    "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name stamp-maker --release",
+    "build": "snowpack build",
+    "deploy": "npm run wasmbuild && npm run build"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "snowpack": "^3.5.1"
   },
