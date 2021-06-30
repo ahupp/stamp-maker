@@ -79,7 +79,10 @@
         <button type="button" disabled="true" id="start_download" name="start_download">Download as .obj</input>
       </div>
       <div id="preview"></div>
-      <script type="module" src="/index.js"></script>
+      <script type="module">
+        import {initStampRender} from "./index.js";
+        initStampRender(document);
+      </script>
    </div>
    <i><a href="https://github.com/ahupp/stamp-maker">stamp-maker</a>, &copy; 2021 Adam Hupp &lt;adam@hupp.org&gt;</i>
   </body>

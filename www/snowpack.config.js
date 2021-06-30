@@ -3,9 +3,19 @@
 
 /** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
-  workspaceRoot: "../"  ,
+  workspaceRoot: "../",
+  alias: {
+    "stamp-maker-wasm": "../wasm/pkg",
+  },
   mount: {
-    /* ... */
+    "../wasm/pkg": {
+      url: "/dist/stamp-maker-wasm",
+      static: true,
+      resolve: true,
+    },
+    "./": {
+      url: "/",
+    },
   },
   plugins: [
     /* ... */
