@@ -19,7 +19,7 @@ customization of a few important parameters (dimensions, smoothing, etc).
 
 Developing this project depends on:
 
- 1. npm, packaged with nodejs
+ 1. yarn
  2. [rustup](https://rustup.rs/), the rust toolchain installer
  3. [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/), a Rust WASM build tool
 
@@ -27,8 +27,8 @@ To rebuild the WASM:
 
 ```
  $ cd www
- $ npm install
- $ npm run wasmbuild
+ $ yarn install
+ $ yarn run wasmbuild
 ```
 
 To start the browser interface:
