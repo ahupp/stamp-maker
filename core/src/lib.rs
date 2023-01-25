@@ -277,6 +277,7 @@ pub fn generate_raw(img: GrayImage, output: &mut dyn io::Write, opt: &Options) -
         let border_padding = (opt.smooth_radius_mm / mm_per_pixel(&img) + 5.0) as u32;
         let mut expanded = GrayImage::new(
             img.dimensions().0 + 2*border_padding, img.dimensions().1 + 2*border_padding);
+        let border_padding = border_padding as i64;
         imageops::replace(&mut expanded, &img, border_padding, border_padding);
         expanded
     };
