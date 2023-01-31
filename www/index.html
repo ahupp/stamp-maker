@@ -81,7 +81,10 @@
       <div id="preview"></div>
       <script type="module">
         import {initStampRender} from "./index.js";
-        initStampRender(document);
+            initStampRender(document).catch(e => {
+              console.error(e);
+              alert("Error: " + e);
+            });
       </script>
    </div>
    <i><a href="https://github.com/ahupp/stamp-maker">stamp-maker</a>, &copy; 2021 Adam Hupp &lt;adam@hupp.org&gt;</i>

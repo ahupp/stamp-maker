@@ -5,16 +5,17 @@
   "main": "index.js",
   "scripts": {
     "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name index --release",
-    "build": "snowpack build",
-    "deploy": "npm run wasmbuild && npm run build"
+    "build": "vite build",
+    "deploy": "yarn run wasmbuild && yarn run build"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "snowpack": "^3.8"
+    "snowpack": "^3.8",
+    "vite": "latest"
   },
   "dependencies": {
-    "stamp-maker-wasm": "file:../wasm/pkg",
+    "stamp-maker-wasm": "../wasm/pkg",
     "three": "^0.148"
   },
   "packageManager": "yarn@3.3.1"

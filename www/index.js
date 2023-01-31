@@ -1,9 +1,11 @@
 import { StampRender } from "./stamp-render.js";
+// Workaround for vite not supporting "files" in package.json
+import wasmUrl from 'stamp-maker-wasm/index_bg.wasm?url'
 import initStampMaker, * as stamp_maker from "stamp-maker-wasm";
 
-await initStampMaker();
+export async function initStampRender(document) {
+  await initStampMaker(wasmUrl);
 
-export function initStampRender(document) {
   const preview = document.getElementById("preview");
 
   const stampView = new StampRender(preview);
