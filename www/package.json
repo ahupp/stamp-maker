@@ -11,8 +11,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "snowpack": "^3.8",
-    "vite": "latest"
+    "vite": "4.1.1"
   },
   "dependencies": {
     "stamp-maker-wasm": "../wasm/pkg",
