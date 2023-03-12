@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name index --release",
-    "build": "vite build",
-    "deploy": "yarn run wasmbuild && yarn run build"
+    "wwwbuild": "vite build",
+    "deploy": "yarn run wasmbuild && yarn run wwwbuild",
+    "start": "yarn run deploy && vite preview"
   },
   "author": "",
   "license": "MIT",
