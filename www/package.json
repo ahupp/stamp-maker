@@ -6,10 +6,10 @@
   "scripts": {
     "wasmbuild": "cd ../wasm; wasm-pack build --target web --out-name index --release",
     "wwwbuild": "vite build",
-    "deploy": "yarn run wasmbuild && yarn run wwwbuild",
-    "start": "yarn run deploy && vite preview"
+    "deploy": "npm run wasmbuild && npm run wwwbuild",
+    "start": "npm run deploy && vite preview"
   },
-  "author": "",
+  "author": "Adam Hupp <adam@hupp.org>",
   "license": "MIT",
   "devDependencies": {
     "vite": "4.1.1"
